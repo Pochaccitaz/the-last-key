@@ -1,325 +1,269 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>THE LAST KEY</title>
+<title>THE LAST KEY | Survival Horror</title>
 <style>
+:root{--violet:#c18cff;--pink:#ff315c}
 *{box-sizing:border-box}
-body{margin:0;background:#050408;color:white;font-family:Arial,sans-serif;overflow:hidden}
+body{margin:0;background:#050408;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
 canvas{display:block}
-#hud{position:fixed;inset:0;pointer-events:none}
-#top{display:flex;justify-content:space-between;padding:22px;font-size:13px;letter-spacing:2px;text-shadow:0 0 10px #a000ff}
-#crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;color:#d8baff}
-#hint{position:absolute;bottom:35px;width:100%;text-align:center;color:#ddd;font-size:13px;letter-spacing:2px}
-#message{position:absolute;top:65%;width:100%;text-align:center;color:#dc9aff;text-shadow:0 0 12px #b000ff}
-#overlay{position:fixed;inset:0;background:radial-gradient(ellipse,#1c1028dd,#030205f5);display:flex;align-items:center;justify-content:center;text-align:center;z-index:5;padding:20px}
-.panel{max-width:520px}
-h1{font-size:clamp(42px,9vw,76px);letter-spacing:8px;margin:0;color:#e4caff;text-shadow:0 0 25px #a000ff}
-.subtitle{letter-spacing:5px;color:#b68bd7;font-size:12px;margin:15px 0 30px}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:2}
+#top{display:flex;justify-content:space-between;gap:12px;padding:20px 24px;font-size:12px;letter-spacing:2px;text-shadow:0 0 12px #a000ff}
+#crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;color:#e6caff;text-shadow:0 0 8px #a000ff}
+#hint{position:absolute;bottom:22px;width:100%;text-align:center;color:#c7bed2;font-size:11px;letter-spacing:1.5px;text-shadow:0 0 8px #000}
+#message{position:absolute;top:65%;width:100%;text-align:center;color:#e0b0ff;text-shadow:0 0 12px #b000ff;font-size:14px;letter-spacing:2px}
+#danger{position:absolute;inset:0;border:0 solid rgba(255,0,45,0);transition:border-width .2s}
+#overlay{position:fixed;inset:0;background:radial-gradient(ellipse,#21132ddd,#030205f5);display:flex;align-items:center;justify-content:center;text-align:center;z-index:5;padding:20px}
+.panel{max-width:560px}
+h1{font-size:clamp(42px,9vw,76px);letter-spacing:7px;margin:0;color:#e4caff;text-shadow:0 0 25px #a000ff}
+.subtitle{letter-spacing:5px;color:#b68bd7;font-size:12px;margin:15px 0 28px}
 p{color:#c4bdce;line-height:1.8;font-size:14px}
-button{background:#8000bb;border:1px solid #d8a0ff;color:white;padding:15px 30px;font-weight:bold;letter-spacing:3px;cursor:pointer;margin-top:18px}
+button{background:#8000bb;border:1px solid #d8a0ff;color:white;padding:15px 30px;font-weight:bold;letter-spacing:2px;cursor:pointer;margin-top:18px}
 button:hover{background:#a500ed}
-.small{font-size:11px;color:#8e839a;margin-top:25px}
-#scare{display:none;position:fixed;inset:0;background:#180009;z-index:10;align-items:center;justify-content:center;font-size:clamp(45px,12vw,120px);color:#ff1744;text-shadow:0 0 30px red;text-align:center}
+.small{font-size:11px;color:#8e839a;margin-top:24px;line-height:1.8}
+#scare{display:none;position:fixed;inset:0;background:radial-gradient(circle,#450012,#080006 65%);z-index:10;align-items:center;justify-content:center;font-size:clamp(45px,12vw,120px);color:#ff1744;text-shadow:0 0 30px red;text-align:center;letter-spacing:4px}
+#scare span{font-size:14px;display:block;letter-spacing:3px;margin-top:20px}
+@media(max-width:600px){#top{padding:12px;font-size:9px;letter-spacing:1px}#hint{font-size:9px;letter-spacing:.5px}}
 </style>
 </head>
 <body>
 <div id="hud">
-  <div id="top">
-    <div>THE LAST KEY</div>
-    <div id="keys">CHAVES: 0 / 3</div>
-    <div id="status">SINAL: FRACO</div>
-  </div>
-  <div id="crosshair">+</div>
-  <div id="message"></div>
-  <div id="hint">WASD MOVER · MOUSE OLHAR · SHIFT CORRER · F LANTERNA · E INTERAGIR · ESC PAUSAR</div>
+  <div id="top"><div>THE LAST KEY</div><div id="keys">CHAVES: 0 / 3</div><div id="status">SINAL: FRACO</div></div>
+  <div id="crosshair">+</div><div id="message"></div><div id="danger"></div>
+  <div id="hint">WASD MOVER · MOUSE OLHAR · SHIFT CORRER · ESPAÇO PULAR · F LANTERNA · E INTERAGIR · ESC PAUSAR</div>
 </div>
-<div id="overlay">
-  <div class="panel">
-    <h1 id="title">THE LAST KEY</h1>
-    <div class="subtitle">NÃO ESTÁS SOZINHO.</div>
-    <p id="description">O prédio foi abandonado há anos.<br>Três chaves. Uma saída.<br>Alguma coisa se move no escuro.</p>
-    <p>WASD: andar<br>Mouse: olhar · Shift: correr<br>F: lanterna · E: pegar chaves e abrir portas</p>
-    <button id="start">ENTRAR NO PRÉDIO</button>
-    <div class="small">USE FONES. NÃO OLHE PARA TRÁS.</div>
-  </div>
-</div>
-<div id="scare">ELE TE ENCONTROU.</div>
-
+<div id="overlay"><div class="panel">
+  <h1 id="title">THE LAST KEY</h1><div class="subtitle">NÃO ESTÁS SOZINHO.</div>
+  <p id="description">O prédio foi abandonado há anos.<br>Três chaves. Uma saída.<br>Alguma coisa se move no escuro.</p>
+  <p>WASD: andar · Mouse: olhar<br>Shift: correr · Espaço: pular<br>F: lanterna · E: pegar chaves e abrir portas</p>
+  <button id="start">ENTRAR NO PRÉDIO</button>
+  <div class="small">USE FONES. O SOM PODE TE SALVAR.<br>Os sons são gerados pelo próprio jogo.</div>
+</div></div>
+<div id="scare">ELE TE ENCONTROU.<span>O PRÉDIO AINDA PRECISA DE UMA VÍTIMA.</span></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05040a);
-scene.fog = new THREE.FogExp2(0x080610, 0.045);
-
-const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 100);
-camera.rotation.order = 'YXZ';
-
-const renderer = new THREE.WebGLRenderer({antialias:true});
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x05040a);
+scene.fog=new THREE.FogExp2(0x080610,.038);
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,100);
+camera.rotation.order='YXZ';
+const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0x665577,0x08060d,0.35));
+scene.add(new THREE.HemisphereLight(0x665577,0x08060d,.38));
+const flashlight=new THREE.SpotLight(0xe1d5ff,95,20,Math.PI/7,.45,1.5);
+flashlight.castShadow=true;flashlight.shadow.mapSize.set(512,512);
+scene.add(flashlight,flashlight.target);
 
-const flashlight = new THREE.SpotLight(0xe1d5ff, 95, 19, Math.PI/7, 0.45, 1.5);
-flashlight.castShadow = true;
-flashlight.shadow.mapSize.set(512,512);
-scene.add(flashlight);
-scene.add(flashlight.target);
-
-const floorMat = new THREE.MeshStandardMaterial({color:0x24202b,roughness:0.95});
-const wallMat = new THREE.MeshStandardMaterial({color:0x28212e,roughness:0.95});
-const darkMat = new THREE.MeshStandardMaterial({color:0x08060c,roughness:1});
-const purpleMat = new THREE.MeshStandardMaterial({color:0x500b72,emissive:0x26003d,emissiveIntensity:1.5});
-const redMat = new THREE.MeshStandardMaterial({color:0xff102f,emissive:0x990018,emissiveIntensity:2});
-const keyMat = new THREE.MeshStandardMaterial({color:0xffd45a,emissive:0x9b6000,emissiveIntensity:2,metalness:.7,roughness:.25});
-
+const floorMat=new THREE.MeshStandardMaterial({color:0x24202b,roughness:.95});
+const wallMat=new THREE.MeshStandardMaterial({color:0x28212e,roughness:.95});
+const darkMat=new THREE.MeshStandardMaterial({color:0x08060c,roughness:1});
+const purpleMat=new THREE.MeshStandardMaterial({color:0x500b72,emissive:0x26003d,emissiveIntensity:1.5});
+const redMat=new THREE.MeshStandardMaterial({color:0xff102f,emissive:0x990018,emissiveIntensity:2});
+const keyMat=new THREE.MeshStandardMaterial({color:0xffd45a,emissive:0x9b6000,emissiveIntensity:2,metalness:.7,roughness:.25});
 function cube(x,y,z,sx,sy,sz,mat,shadow=true){
-  const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
-  m.position.set(x,y,z);
-  m.castShadow=shadow;m.receiveShadow=true;scene.add(m);return m;
+ const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
+ m.position.set(x,y,z);m.castShadow=shadow;m.receiveShadow=true;scene.add(m);return m;
 }
-
-// Prédio e corredores
 cube(0,-.25,0,32,.5,32,floorMat);
-cube(0,3,-16,32,6,.5,wallMat);
-cube(0,3,16,32,6,.5,wallMat);
-cube(-16,3,0,.5,6,32,wallMat);
-cube(16,3,0,.5,6,32,wallMat);
-
-// Paredes que formam o labirinto
+cube(0,3,-16,32,6,.5,wallMat);cube(0,3,16,32,6,.5,wallMat);
+cube(-16,3,0,.5,6,32,wallMat);cube(16,3,0,.5,6,32,wallMat);
 const walls=[
-[-9,0, -10, .6,6,12],[-3,0,-12, .6,6,8],
-[4,0,-10, .6,6,12],[10,0,-12,.6,6,8],
-[-12,0,-3,7,6,.6],[-5,0,-4,5,6,.6],
-[2,0,-3,5,6,.6],[11,0,-4,10,6,.6],
-[-10,0,4,.6,6,9],[-3,0,5,.6,6,8],
-[4,0,5,.6,6,8],[11,0,4,.6,6,9],
-[-5,0,10,7,6,.6],[5,0,10,7,6,.6],
-[0,0,14,10,6,.6]
+[-9,0,-10,.6,6,12],[-3,0,-12,.6,6,8],[4,0,-10,.6,6,12],[10,0,-12,.6,6,8],
+[-12,0,-3,7,6,.6],[-5,0,-4,5,6,.6],[2,0,-3,5,6,.6],[11,0,-4,10,6,.6],
+[-10,0,4,.6,6,9],[-3,0,5,.6,6,8],[4,0,5,.6,6,8],[11,0,4,.6,6,9],
+[-5,0,10,7,6,.6],[5,0,10,7,6,.6],[0,0,14,10,6,.6]
 ];
 for(const [x,y,z,sx,sy,sz] of walls)cube(x,3,z,sx,sy,sz,wallMat);
-
-// Lâmpadas de emergência
 for(const [x,z] of [[-13,-13],[0,-14],[13,-13],[-13,0],[0,0],[13,0],[-13,13],[13,13]]){
-  const lamp=cube(x,5.6,z,.35,.12,.35,purpleMat,false);
-  const light=new THREE.PointLight(0x9b22ff,2,7);
-  light.position.set(x,5,z);scene.add(light);
+ cube(x,5.6,z,.35,.12,.35,purpleMat,false);
+ const l=new THREE.PointLight(0x9b22ff,2,7);l.position.set(x,5,z);scene.add(l);
 }
-
-// Porta de saída
 const exitDoor=cube(0,2.1,14.65,3.2,4.2,.3,redMat);
-const exitLight=new THREE.PointLight(0xff0033,2,8);
-exitLight.position.set(0,3,13);scene.add(exitLight);
-
-// Decoração: colunas e entulho
-for(let i=0;i<18;i++){
-  const x=(Math.random()-.5)*28,z=(Math.random()-.5)*28;
-  if(Math.abs(x)<3&&z>8)continue;
-  cube(x,.25,z,.35,.5,.35,darkMat,false);
+const exitLight=new THREE.PointLight(0xff0033,2,8);exitLight.position.set(0,3,13);scene.add(exitLight);
+for(let i=0;i<28;i++){
+ const x=(Math.random()-.5)*28,z=(Math.random()-.5)*28;
+ if(Math.abs(x)<3&&z>8)continue;
+ cube(x,.25,z,.35,.5,.35,darkMat,false);
 }
-
-// Chaves flutuantes
 const keyPositions=[new THREE.Vector3(-12,1.2,-9),new THREE.Vector3(12,1.2,2),new THREE.Vector3(0,1.2,12)];
 const keys=[];
 for(const p of keyPositions){
-  const g=new THREE.Group();
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.23,.065,8,18),keyMat);
-  ring.rotation.x=Math.PI/2;g.add(ring);
-  const stem=cube(0,0,0,.1,.48,.1,keyMat,false);
-  stem.position.y=-.28;g.add(stem);
-  g.position.copy(p);scene.add(g);keys.push({group:g,found:false});
+ const g=new THREE.Group();
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.23,.065,8,18),keyMat);ring.rotation.x=Math.PI/2;g.add(ring);
+ const stem=new THREE.Mesh(new THREE.BoxGeometry(.1,.48,.1),keyMat);stem.position.y=-.28;g.add(stem);
+ g.position.copy(p);scene.add(g);keys.push({group:g,found:false});
 }
-
-// Criatura sombria
 const monster=new THREE.Group();
 const bodyMat=new THREE.MeshStandardMaterial({color:0x09070c,roughness:1});
-const body=new THREE.Mesh(new THREE.CapsuleGeometry(.48,1.1,5,8),bodyMat);
-body.position.y=1.1;monster.add(body);
-const head=new THREE.Mesh(new THREE.SphereGeometry(.43,12,10),bodyMat);
-head.position.y=2.05;monster.add(head);
+const body=new THREE.Mesh(new THREE.CapsuleGeometry(.48,1.1,5,8),bodyMat);body.position.y=1.1;monster.add(body);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.43,12,10),bodyMat);head.position.y=2.05;monster.add(head);
 for(const x of [-.17,.17]){
-  const eye=new THREE.Mesh(new THREE.SphereGeometry(.065,8,8),redMat);
-  eye.position.set(x,2.08,-.37);monster.add(eye);
+ const eye=new THREE.Mesh(new THREE.SphereGeometry(.065,8,8),redMat);eye.position.set(x,2.08,-.37);monster.add(eye);
 }
-monster.position.set(13,0,-13);scene.add(monster);
+scene.add(monster);
 
 const player={x:0,z:12,y:1.7,vy:0,yaw:0,pitch:0};
-camera.position.set(player.x,player.y,player.z);
-
 const pressed={};
-let started=false,ended=false,won=false,flashOn=true,found=0;
-let messageTimer=0,lastTime=performance.now(),elapsed=0,scareCooldown=0;
-let audioCtx=null;
-
+let started=false,ended=false,flashOn=true,found=0,elapsed=0,messageTimer=0,lastTime=performance.now(),scareCooldown=0;
+let audioCtx=null,masterGain=null,heartbeatTimer=0,footstepTimer=0;
+function initAudio(){
+ if(audioCtx)return;
+ audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ masterGain=audioCtx.createGain();masterGain.gain.value=.6;masterGain.connect(audioCtx.destination);
+ // Drone ambiente grave, sintetizado localmente
+ const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
+ osc.type='sawtooth';osc.frequency.value=42;filter.type='lowpass';filter.frequency.value=110;gain.gain.value=.035;
+ osc.connect(filter);filter.connect(gain);gain.connect(masterGain);osc.start();
+ const lfo=audioCtx.createOscillator(),lfoGain=audioCtx.createGain();
+ lfo.frequency.value=.17;lfoGain.gain.value=12;lfo.connect(lfoGain);lfoGain.connect(osc.frequency);lfo.start();
+}
 function sound(freq=100,duration=.15,type='sine',volume=.04){
-  try{
-    if(!audioCtx)audioCtx=new AudioContext();
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    o.type=type;o.frequency.value=freq;g.gain.value=volume;
-    o.connect(g);g.connect(audioCtx.destination);o.start();
-    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);
-    o.stop(audioCtx.currentTime+duration);
-  }catch(e){}
+ if(!audioCtx)return;
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type=type;o.frequency.value=freq;g.gain.value=volume;
+ o.connect(g);g.connect(masterGain);o.start();
+ g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);
+ o.stop(audioCtx.currentTime+duration);
 }
-function say(t,secs=2){
-  document.getElementById('message').textContent=t;
-  messageTimer=secs;
+function scareSting(){
+ sound(55,.8,'sawtooth',.13);
+ setTimeout(()=>sound(880,.35,'square',.06),100);
 }
+function say(t,secs=2){document.getElementById('message').textContent=t;messageTimer=secs}
 function showEnd(win){
-  ended=true;won=win;document.exitPointerLock?.();
-  document.getElementById('overlay').style.display='flex';
-  document.getElementById('title').textContent=win?'VOCÊ ESCAPOU':'FIM DE JOGO';
-  document.getElementById('description').innerHTML=win?
-    'A porta se abriu.<br>Mas alguma coisa veio junto.':
-    'Você ouviu os passos tarde demais.<br>O prédio ainda precisa de uma vítima.';
-  document.getElementById('start').textContent='TENTAR NOVAMENTE';
-  document.getElementById('scare').style.display=win?'none':'flex';
-  sound(win?440:45,1,'sawtooth',.08);
+ ended=true;document.exitPointerLock?.();
+ document.getElementById('overlay').style.display='flex';
+ document.getElementById('title').textContent=win?'VOCÊ ESCAPOU':'FIM DE JOGO';
+ document.getElementById('description').innerHTML=win?'A porta se abriu.<br>Mas alguma coisa veio junto.':'Você ouviu os passos tarde demais.<br>O prédio ainda precisa de uma vítima.';
+ document.getElementById('start').textContent='TENTAR NOVAMENTE';
+ document.getElementById('scare').style.display=win?'none':'flex';
+ if(!win)scareSting();else sound(440,.7,'sine',.06);
 }
 function reset(){
-  player.x=0;player.z=12;player.y=1.7;player.vy=0;player.yaw=0;player.pitch=0;
-  camera.position.set(0,1.7,12);camera.rotation.set(0,0,0);
-  monster.position.set(13,0,-13);
-  found=0;ended=false;won=false;elapsed=0;
-  keys.forEach(k=>{k.found=false;k.group.visible=true});
-  exitDoor.visible=true;flashOn=true;flashlight.intensity=95;
-  document.getElementById('keys').textContent='CHAVES: 0 / 3';
-  document.getElementById('status').textContent='SINAL: FRACO';
-  document.getElementById('scare').style.display='none';
-  document.getElementById('overlay').style.display='none';
-  say('ENCONTRE AS 3 CHAVES.',3);
+ player.x=0;player.z=12;player.y=1.7;player.vy=0;player.yaw=0;player.pitch=0;
+ camera.position.set(0,1.7,12);camera.rotation.set(0,0,0);
+ monster.position.set(13,0,-13);
+ found=0;ended=false;elapsed=0;scareCooldown=0;heartbeatTimer=0;footstepTimer=0;
+ keys.forEach(k=>{k.found=false;k.group.visible=true});
+ exitDoor.visible=true;flashOn=true;flashlight.intensity=95;
+ document.getElementById('keys').textContent='CHAVES: 0 / 3';
+ document.getElementById('status').textContent='SINAL: FRACO';
+ document.getElementById('scare').style.display='none';
+ document.getElementById('overlay').style.display='none';
+ say('ENCONTRE AS 3 CHAVES.',3);
 }
 function blocked(x,z){
-  const r=.42;
-  if(x < -15+r||x>15-r||z < -15+r||z>15-r)return true;
-  for(const [wx,wy,wz,sx,sy,sz] of walls){
-    if(Math.abs(x-wx)<sx/2+r&&Math.abs(z-wz)<sz/2+r)return true;
+ const r=.42;
+ if(x < -15+r||x>15-r||z < -15+r||z>15-r)return true;
+ for(const [wx,wy,wz,sx,sy,sz] of walls){
+  if(Math.abs(x-wx)<sx/2+r&&Math.abs(z-wz)<sz/2+r)return true;
+ }
+ if(exitDoor.visible&&Math.abs(x)<1.8+r&&Math.abs(z-14.65)<.4+r)return true;
+ return false;
+}
+function interact(){
+ for(const k of keys){
+  if(!k.found&&k.group.position.distanceTo(camera.position)<2.2){
+   k.found=true;k.group.visible=false;found++;
+   document.getElementById('keys').textContent=`CHAVES: ${found} / 3`;
+   say('CHAVE ENCONTRADA!',2);sound(760,.22,'triangle',.06);
+   if(found===3)say('AS 3 CHAVES! ENCONTRE A SAÍDA!',4);
+   return;
   }
-  // Porta fechada
-  if(exitDoor.visible&&Math.abs(x)<1.8+r&&Math.abs(z-14.65)<.4+r)return true;
-  return false;
+ }
+ if(Math.abs(player.x)<2.5&&player.z>11&&found===3){exitDoor.visible=false;showEnd(true);return}
+ if(Math.abs(player.x)<2.5&&player.z>11&&found<3){say(`PORTA TRANCADA. FALTAM ${3-found} CHAVES.`,2);sound(90,.12,'sawtooth');return}
+ say('NÃO HÁ NADA AQUI.',1);
 }
-function lockMouse(){
-  if(started&&!ended)renderer.domElement.requestPointerLock?.();
-}
-document.getElementById('start').addEventListener('click',()=>{
-  if(ended||!started)reset();
-  started=true;
-  document.getElementById('overlay').style.display='none';
-  lockMouse();sound(180,.15);
+document.getElementById('start').addEventListener('click',async()=>{
+ initAudio();if(audioCtx.state==='suspended')await audioCtx.resume();
+ reset();started=true;
+ renderer.domElement.requestPointerLock?.();
 });
-
 document.addEventListener('pointerlockchange',()=>{
-  if(started&&!ended&&document.pointerLockElement!==renderer.domElement){
-    document.getElementById('overlay').style.display='flex';
-    document.getElementById('title').textContent='PAUSADO';
-    document.getElementById('description').textContent='Clique para voltar ao prédio.';
-    document.getElementById('start').textContent='CONTINUAR';
-  }
+ if(started&&!ended&&document.pointerLockElement!==renderer.domElement){
+  document.getElementById('overlay').style.display='flex';
+  document.getElementById('title').textContent='PAUSADO';
+  document.getElementById('description').textContent='O prédio continua esperando.';
+  document.getElementById('start').textContent='CONTINUAR';
+ }
 });
 document.addEventListener('mousemove',e=>{
-  if(document.pointerLockElement!==renderer.domElement||ended)return;
-  player.yaw-=e.movementX*.0022;
-  player.pitch-=e.movementY*.0022;
-  player.pitch=Math.max(-1.45,Math.min(1.45,player.pitch));
-  camera.rotation.set(player.pitch,player.yaw,0,'YXZ');
+ if(document.pointerLockElement!==renderer.domElement||ended)return;
+ player.yaw-=e.movementX*.0022;
+ player.pitch-=e.movementY*.0022;
+ player.pitch=Math.max(-1.45,Math.min(1.45,player.pitch));
+ camera.rotation.set(player.pitch,player.yaw,0,'YXZ');
 });
 document.addEventListener('keydown',e=>{
-  pressed[e.code]=true;
-  if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();
-  if(e.code==='KeyF'&&started&&!ended){
-    flashOn=!flashOn;flashlight.intensity=flashOn?95:0;
-    say(flashOn?'LANTERNA LIGADA':'LANTERNA DESLIGADA',1);
-    sound(flashOn?500:180,.06);
-  }
-  if(e.code==='Space'&&player.y<=1.71)player.vy=5.5;
-  if(e.code==='KeyE'&&started&&!ended)interact();
+ pressed[e.code]=true;
+ if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();
+ if(e.repeat)return;
+ if(e.code==='KeyF'&&started&&!ended){
+  flashOn=!flashOn;flashlight.intensity=flashOn?95:0;
+  say(flashOn?'LANTERNA LIGADA':'LANTERNA DESLIGADA',1);sound(flashOn?500:180,.06,'square');
+ }
+ if(e.code==='Space'&&player.y<=1.71&&started&&!ended&&document.pointerLockElement===renderer.domElement)player.vy=5.5;
+ if(e.code==='KeyE'&&started&&!ended&&document.pointerLockElement===renderer.domElement)interact();
 });
 document.addEventListener('keyup',e=>pressed[e.code]=false);
-
-function interact(){
-  for(const k of keys){
-    if(!k.found&&k.group.position.distanceTo(camera.position)<2.2){
-      k.found=true;k.group.visible=false;found++;
-      document.getElementById('keys').textContent=`CHAVES: ${found} / 3`;
-      say('CHAVE ENCONTRADA!',2);sound(760,.22,'triangle');
-      if(found===3)say('AS 3 CHAVES! ENCONTRE A SAÍDA!',4);
-      return;
-    }
-  }
-  if(Math.abs(player.x)<2.5&&player.z>11&&found===3){
-    exitDoor.visible=false;showEnd(true);return;
-  }
-  if(Math.abs(player.x)<2.5&&player.z>11&&found<3){
-    say(`A PORTA ESTÁ TRANCADA. FALTAM ${3-found} CHAVES.`,2);sound(90,.12);
-    return;
-  }
-  say('NÃO HÁ NADA AQUI.',1);
-}
-
 function update(dt){
-  if(!started||ended||document.pointerLockElement!==renderer.domElement)return;
-  elapsed+=dt;scareCooldown=Math.max(0,scareCooldown-dt);
-  if(messageTimer>0){messageTimer-=dt;if(messageTimer<=0)document.getElementById('message').textContent='';}
-  for(const k of keys)if(!k.found)k.group.rotation.y+=dt*1.4;
-  const forward=(pressed.KeyW||pressed.ArrowUp?1:0)-(pressed.KeyS||pressed.ArrowDown?1:0);
-  const side=(pressed.KeyD?1:0)-(pressed.KeyA?1:0);
-  const speed=(pressed.ShiftLeft||pressed.ShiftRight)?5.8:3.4;
-  const len=Math.hypot(forward,side)||1;
-  const dx=(Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/len*speed*dt;
-  const dz=(-Math.cos(player.yaw)*forward+Math.sin(player.yaw)*side)/len*speed*dt;
-  if(!blocked(player.x+dx,player.z))player.x+=dx;
-  if(!blocked(player.x,player.z+dz))player.z+=dz;
-  player.vy-=14*dt;player.y+=player.vy*dt;
-  if(player.y<1.7){player.y=1.7;player.vy=0}
-  camera.position.set(player.x,player.y,player.z);
-  flashlight.position.copy(camera.position);
-  const dir=new THREE.Vector3(0,0,-1).applyEuler(camera.rotation);
-  flashlight.target.position.copy(camera.position).add(dir.multiplyScalar(5));
-
-  // A criatura se aproxima gradualmente
-  const dist=Math.hypot(monster.position.x-player.x,monster.position.z-player.z);
-  const hunting=dist<12||elapsed>35;
-  if(hunting&&dist>1.15){
-    const mx=(player.x-monster.position.x)/dist;
-    const mz=(player.z-monster.position.z)/dist;
-    const ms=dist<5?2.25:1.05;
-    const nx=monster.position.x+mx*ms*dt;
-    const nz=monster.position.z+mz*ms*dt;
-    if(!blocked(nx,monster.position.z))monster.position.x=nx;
-    if(!blocked(monster.position.x,nz))monster.position.z=nz;
-    monster.rotation.y=Math.atan2(mx,mz);
-  }
-  monster.position.y=Math.sin(elapsed*4)*.05;
-  document.getElementById('status').textContent=dist<5?'SINAL: PERTO!':dist<9?'SINAL: INSTÁVEL':'SINAL: FRACO';
-  if(dist<8&&scareCooldown<=0){
-    sound(45+Math.random()*25,.12,'sawtooth',.025);scareCooldown=2.5;
-  }
-  if(dist<1.2)showEnd(false);
-  // A criatura fica visível na luz da lanterna
-  body.material.emissive=new THREE.Color(dist<5?0x19000a:0x000000);
+ if(!started||ended||document.pointerLockElement!==renderer.domElement)return;
+ elapsed+=dt;scareCooldown=Math.max(0,scareCooldown-dt);
+ if(messageTimer>0){messageTimer-=dt;if(messageTimer<=0)document.getElementById('message').textContent='';}
+ for(const k of keys)if(!k.found){k.group.rotation.y+=dt*1.4;k.group.position.y=1.2+Math.sin(elapsed*2+k.group.position.x)*.12}
+ const forward=(pressed.KeyW||pressed.ArrowUp?1:0)-(pressed.KeyS||pressed.ArrowDown?1:0);
+ const side=(pressed.KeyD?1:0)-(pressed.KeyA?1:0);
+ const speed=(pressed.ShiftLeft||pressed.ShiftRight)?5.8:3.4;
+ const len=Math.hypot(forward,side)||1;
+ // Correção: W segue a direção da câmera; A/D movem lateralmente, sem inverter.
+ const dx=(Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/len*speed*dt;
+ const dz=(-Math.cos(player.yaw)*forward+Math.sin(player.yaw)*side)/len*speed*dt;
+ const moving=Math.abs(forward)+Math.abs(side)>0;
+ if(!blocked(player.x+dx,player.z))player.x+=dx;
+ if(!blocked(player.x,player.z+dz))player.z+=dz;
+ player.vy-=14*dt;player.y+=player.vy*dt;
+ if(player.y<1.7){player.y=1.7;player.vy=0}
+ camera.position.set(player.x,player.y,player.z);
+ flashlight.position.copy(camera.position);
+ const dir=new THREE.Vector3(0,0,-1).applyEuler(camera.rotation);
+ flashlight.target.position.copy(camera.position).add(dir.multiplyScalar(5));
+ const dist=Math.hypot(monster.position.x-player.x,monster.position.z-player.z);
+ const hunting=dist<12||elapsed>28;
+ if(hunting&&dist>1.15){
+  const mx=(player.x-monster.position.x)/dist,mz=(player.z-monster.position.z)/dist;
+  const ms=dist<5?2.6:1.15;
+  const nx=monster.position.x+mx*ms*dt,nz=monster.position.z+mz*ms*dt;
+  if(!blocked(nx,monster.position.z))monster.position.x=nx;
+  if(!blocked(monster.position.x,nz))monster.position.z=nz;
+  monster.rotation.y=Math.atan2(mx,mz);
+ }
+ monster.position.y=Math.sin(elapsed*4)*.05;
+ document.getElementById('status').textContent=dist<5?'SINAL: PERTO!':dist<9?'SINAL: INSTÁVEL':'SINAL: FRACO';
+ document.getElementById('danger').style.borderWidth=dist<7?`${Math.round((7-dist)*3)}px`:'0';
+ document.getElementById('danger').style.borderColor=`rgba(255,0,45,${dist<7?.35:0})`;
+ if(dist<8){
+  heartbeatTimer-=dt;
+  if(heartbeatTimer<=0){sound(dist<4?72:48,.12,'sine',.06);heartbeatTimer=dist<4?.42:.85}
+ }
+ if(moving){
+  footstepTimer-=dt;
+  if(footstepTimer<=0){sound(65+Math.random()*25,.045,'triangle',.018);footstepTimer=(pressed.ShiftLeft||pressed.ShiftRight)?.25:.42}
+ }else footstepTimer=0;
+ if(dist<1.2)showEnd(false);
+ body.material.emissive=new THREE.Color(dist<5?0x19000a:0x000000);
 }
-
-function loop(now){
-  requestAnimationFrame(loop);
-  const dt=Math.min((now-lastTime)/1000,.05);lastTime=now;
-  update(dt);
-  renderer.render(scene,camera);
-}
+function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-lastTime)/1000,.05);lastTime=now;update(dt);renderer.render(scene,camera)}
 requestAnimationFrame(loop);
-
-addEventListener('resize',()=>{
-  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
-});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body>
 </html>
